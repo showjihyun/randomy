@@ -1,0 +1,95 @@
+{
+  "_설명": "팩토리 키트의 레포별 설정 (엔진 factory_config.py). 키트 공통 보호 경로(scripts/, 정책·절차 파일, .claude/, .codex/, .agents/, docker/ 등)는 엔진 코드에 있고 여기 값과 합쳐진다. 값을 고친 뒤 키트 원본 레포(EIFactory)에서 `python scripts/factory_kit.py check <이 레포>`로 확인한다. 이 파일도 잠금·HIGH 대상이다. 위험 등급은 기획안 12.2: skills/ MEDIUM, 모델 호출·설정과 평가 케이스(evals/) HIGH.",
+  "lock_patterns": [
+    "Makefile",
+    "backend/pyproject.toml",
+    "backend/uv.lock",
+    "backend/tests/*.py",
+    "frontend/package.json",
+    "frontend/package-lock.json",
+    "frontend/tsconfig.json",
+    "frontend/vite.config.ts",
+    "frontend/eslint.config.js",
+    "frontend/src/*.test.ts",
+    "frontend/src/*.test.tsx",
+    "frontend/e2e/*.e2e.ts",
+    "frontend/playwright.config.ts",
+    "evals/*"
+  ],
+  "no_new_file_patterns": ["Makefile", "evals/*"],
+  "high_paths": [
+    "backend/src/randomy/settings.py",
+    "backend/src/randomy/model.py",
+    "evals/*"
+  ],
+  "medium_paths": [
+    "skills/*",
+    "Makefile",
+    "backend/pyproject.toml",
+    "backend/uv.lock",
+    "frontend/package.json",
+    "frontend/package-lock.json",
+    "frontend/tsconfig.json",
+    "frontend/vite.config.ts",
+    "frontend/eslint.config.js",
+    "frontend/playwright.config.ts"
+  ],
+  "test_patterns": [
+    "backend/tests/*",
+    "frontend/src/*.test.ts",
+    "frontend/src/*.test.tsx",
+    "frontend/e2e/*.e2e.ts"
+  ],
+  "changed_test": "^(backend/tests/(\\w+/)*test_\\w+\\.py|frontend/src/(\\w+/)*\\w+(\\.\\w+)*\\.test\\.tsx?|frontend/e2e/(\\w+/)*\\w+(\\.\\w+)*\\.e2e\\.ts)$",
+  "acceptance_tests": [
+    {
+      "pattern": "^backend/tests/acceptance/test_{id}\\.py(::\\w+)?$",
+      "example": "backend/tests/acceptance/test_{id}.py"
+    },
+    {
+      "pattern": "^frontend/src/(\\w+/)*\\w+\\.{id}\\.accept\\.test\\.tsx$",
+      "example": "frontend/src/**/<Name>.{id}.accept.test.tsx"
+    },
+    {
+      "pattern": "^frontend/e2e/(\\w+/)*\\w+\\.{id}\\.accept\\.e2e\\.ts$",
+      "example": "frontend/e2e/<name>.{id}.accept.e2e.ts"
+    }
+  ],
+  "setup": [
+    ["backend", ["uv", "sync", "-q"]],
+    ["frontend", ["npm", "ci", "--no-audit", "--no-fund", "--loglevel=error"]]
+  ],
+  "budgets": {
+    "_설명": "비용 상한 (API 환산 USD, 임시값). new 때 작업에 고정된다. 바꾸기: python scripts/factory_settings.py set budgets <키> <값>",
+    "session": 5.0,
+    "reviewer_call": 0.5,
+    "reviewer_total": 1.5,
+    "job_total": 6.5
+  },
+  "stages": {
+    "_설명": "단계별 모델(auto|haiku|sonnet|opus)과 인증(auto|subscription|api). 바꿀 때는 python scripts/factory_settings.py set <단계> model|auth <값> (사람 전용)",
+    "orchestrator": {"model": "auto", "auth": "auto"},
+    "builder": {"model": "auto", "auth": "auto"},
+    "reviewer_code": {"model": "auto", "auth": "auto"},
+    "reviewer_security": {"model": "auto", "auth": "auto"},
+    "reviewer_test": {"model": "auto", "auth": "auto"}
+  },
+  "job_verify": {
+    "_설명": "작업 diff에 full_if_changed 경로가 없으면 scripts 영역(검증 계약·평가 스크립트 테스트)을 건너뛴다. scripts/와 정책·도구 파일은 엔진 코드가 항상 추가한다.",
+    "args": ["--skip", "scripts"],
+    "full_if_changed": [
+      "backend/pyproject.toml",
+      "backend/uv.lock",
+      "frontend/package.json",
+      "frontend/package-lock.json"
+    ]
+  },
+  "docker": {
+    "workdir": "/workspaces/randomy",
+    "setup_script": "cd backend && uv sync -q && cd ../frontend && npm ci --no-audit --no-fund --loglevel=error",
+    "cache_volumes": {
+      "frontend/node_modules": "node",
+      "/home/node/.venvs": "venv"
+    }
+  }
+}
