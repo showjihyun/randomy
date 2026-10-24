@@ -25,6 +25,18 @@ export async function fetchNote(id: number): Promise<Note> {
   return (await response.json()) as Note;
 }
 
+export async function createNote(title: string, body: string): Promise<Note> {
+  const response = await fetch("/api/notes", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title, body }),
+  });
+  if (!response.ok) {
+    throw new Error(`create note ${response.status}`);
+  }
+  return (await response.json()) as Note;
+}
+
 export type Todo = {
   id: number;
   note_id: number;

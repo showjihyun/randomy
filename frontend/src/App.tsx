@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  createNote,
   fetchHealth,
   fetchNote,
   fetchNotes,
@@ -13,7 +14,8 @@ type View =
   | { kind: "list" }
   | { kind: "loading" }
   | { kind: "detail"; note: Note }
-  | { kind: "missing" };
+  | { kind: "missing" }
+  | { kind: "form" };
 
 export default function App() {
   const [status, setStatus] = useState("서버 확인 중");
@@ -21,6 +23,29 @@ export default function App() {
   const [view, setView] = useState<View>({ kind: "list" });
   const [tab, setTab] = useState<"notes" | "todos">("notes");
   const [todos, setTodos] = useState<Todo[] | null>(null);
+  const [draftTitle, setDraftTitle] = useState("");
+  const [draftBody, setDraftBody] = useState("");
+  const [saveFailed, setSaveFailed] = useState(false);
+
+  function openForm() {
+    setDraftTitle("");
+    setDraftBody("");
+    setSaveFailed(false);
+    setView({ kind: "form" });
+  }
+
+  function saveNote() {
+    if (draftBody.trim() === "") {
+      return;
+    }
+    setSaveFailed(false);
+    createNote(draftTitle, draftBody)
+      .then((note) => {
+        setNotes((prev) => [note, ...(prev ?? [])]);
+        setView({ kind: "detail", note });
+      })
+      .catch(() => setSaveFailed(true));
+  }
 
   useEffect(() => {
     fetchHealth()
@@ -105,6 +130,35 @@ export default function App() {
             </li>
           ))}
         </ul>
+      )}
+      {tab === "notes" && view.kind === "list" && (
+        <button type="button" onClick={openForm}>
+          새 노트
+        </button>
+      )}
+      {tab === "notes" && view.kind === "form" && (
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            saveNote();
+          }}
+        >
+          <label>
+            제목
+            <input value={draftTitle} onChange={(e) => setDraftTitle(e.target.value)} />
+          </label>
+          <label>
+            본문
+            <textarea value={draftBody} onChange={(e) => setDraftBody(e.target.value)} />
+          </label>
+          {saveFailed && <p>저장하지 못했습니다</p>}
+          <button type="submit" disabled={draftBody.trim() === ""}>
+            저장
+          </button>
+          <button type="button" onClick={() => setView({ kind: "list" })}>
+            취소
+          </button>
+        </form>
       )}
       {tab === "notes" && view.kind === "list" && notes !== null && notes.length === 0 && (
         <p>저장된 노트가 없습니다</p>
