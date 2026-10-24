@@ -1,5 +1,6 @@
 """회의록 정리 결과 형식과 검사."""
 
+import json
 from typing import Any
 
 TOP_FIELDS = ("summary", "decisions", "todos")
@@ -58,3 +59,34 @@ def validate_result(data: Any) -> list[str]:
         if name not in TOP_FIELDS:
             problems.append(f"{name}은(는) 정해지지 않은 필드입니다")
     return problems
+
+
+class ResultError(Exception):
+    """모델 출력이 결과 형식에 맞지 않을 때."""
+
+    def __init__(self, problems: list[str]) -> None:
+        super().__init__("; ".join(problems))
+        self.problems = problems
+
+
+def strip_fence(text: str) -> str:
+    """앞뒤 공백과, 출력 전체를 감싼 코드 블록 표시를 벗겨 낸다."""
+    text = text.strip()
+    if text.startswith("```") and text.endswith("```") and len(text) >= 6:
+        inner = text[3:-3]
+        if inner.startswith("json"):
+            inner = inner[4:]
+        return inner.strip()
+    return text
+
+
+def parse_result(text: str) -> dict[str, Any]:
+    try:
+        data = json.loads(strip_fence(text))
+    except json.JSONDecodeError as error:
+        raise ResultError([f"JSON으로 읽을 수 없습니다: {error.msg}"]) from error
+    problems = validate_result(data)
+    if problems:
+        raise ResultError(problems)
+    assert isinstance(data, dict)
+    return data
