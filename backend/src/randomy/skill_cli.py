@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from randomy.model import ModelError, get_model
+from randomy.notes_result import strip_fence
 from randomy.settings import Settings
 
 SKILLS_DIR = Path(__file__).resolve().parents[3] / "skills"
@@ -24,7 +25,7 @@ SKILLS_DIR = Path(__file__).resolve().parents[3] / "skills"
 
 def parse_output(text: str) -> Any:
     try:
-        return json.loads(text)
+        return json.loads(strip_fence(text))
     except json.JSONDecodeError:
         return text
 
