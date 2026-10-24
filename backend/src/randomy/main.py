@@ -6,6 +6,7 @@ from fastapi import FastAPI
 
 from randomy.notes import create_notes_router
 from randomy.settings import Settings
+from randomy.todos import create_todos_router
 
 
 def create_app(settings: Settings) -> FastAPI:
@@ -16,6 +17,7 @@ def create_app(settings: Settings) -> FastAPI:
         return {"status": "ok", "model": settings.model}
 
     app.include_router(create_notes_router(settings.db_path))
+    app.include_router(create_todos_router(settings.db_path))
 
     return app
 
