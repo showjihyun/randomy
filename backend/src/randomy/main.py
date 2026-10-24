@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 
+from randomy.notes import create_notes_router
 from randomy.settings import Settings
 
 
@@ -13,6 +14,8 @@ def create_app(settings: Settings) -> FastAPI:
     @app.get("/api/health")
     def health() -> dict[str, str]:
         return {"status": "ok", "model": settings.model}
+
+    app.include_router(create_notes_router(settings.db_path))
 
     return app
 
