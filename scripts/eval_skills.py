@@ -12,6 +12,7 @@
   - absent_in: `{"<필드>": [...]}` 그 필드에만 나오면 안 되는 내용 (예: 보류된 안건이
     decisions에 들어감). 다른 필드에서 언급하는 것은 괜찮다. 나오면 지어내기로 센다
 - 실행기가 실패하면(JSON 출력 없음) 그 실행은 실패로 기록하고 평가는 계속한다.
+- 실행별 출력과 문제는 `evals/results/<시각>-<스킬>.json`에 남긴다 (커밋하지 않음).
 - 실행 1회 통과 = 위 조건 모두 만족. 케이스 통과 = `--runs`회 중 `--min-pass`회 이상.
 - 스킬 통과 = 케이스 통과율 90% 이상 + 지어내기 0건.
 - 평가 1회 비용이 `--budget-usd`를 넘으면 그 자리에서 멈추고 BUDGET으로 끝낸다.
@@ -31,6 +32,7 @@ import os
 import subprocess
 import sys
 import tempfile
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -117,6 +119,7 @@ def evaluate_skill(
         case = json.loads(path.read_text(encoding="utf-8"))
         passed = fabrications = 0
         problems: list[str] = []
+        run_outputs: list[dict[str, Any]] = []
         for _ in range(runs):
             try:
                 output, cost = run_skill(root, skill, case["input"])
@@ -124,17 +127,21 @@ def evaluate_skill(
                 # 실행기가 죽어도 평가는 계속하고, 그 실행은 실패로 기록한다
                 run_problems = [f"실행기 오류: {error}"]
                 problems += [p for p in run_problems if p not in problems]
+                run_outputs.append({"passed": False, "output": None, "problems": run_problems})
                 continue
             spent[0] += cost
             run_problems, fabricated = check_run(output, case.get("expect", {}))
             passed += not run_problems
             fabrications += fabricated
             problems += [p for p in run_problems if p not in problems]
+            run_outputs.append(
+                {"passed": not run_problems, "output": output, "problems": run_problems}
+            )
             if spent[0] > budget:
                 raise BudgetExceeded
         results.append(
             {"id": case.get("id", path.stem), "passed_runs": passed, "runs": runs,
-             "fabrications": fabrications, "problems": problems}
+             "fabrications": fabrications, "problems": problems, "run_outputs": run_outputs}
         )  # fmt: skip
     cases_passed = sum(r["passed_runs"] >= min_pass for r in results)
     fabrications_total = sum(r["fabrications"] for r in results)
@@ -189,9 +196,34 @@ def main(argv: list[str] | None = None, root: Path = ROOT) -> int:
         )
     if verdict == "BUDGET":
         print(f"비용 상한 ${args.budget_usd:.2f}을 넘어 멈췄습니다 (${spent[0]:.2f})")
-    result = {"verdict": verdict, "cost_usd": round(spent[0], 6), "skills": report}
-    print(json.dumps(result, ensure_ascii=False))
+    record = {"verdict": verdict, "cost_usd": round(spent[0], 6), "skills": report}
+    saved = save_record(root, record)
+    print(f"실행별 출력: {saved}")
+    # 화면 요약에는 실행별 출력 전문을 빼고, 저장한 파일 위치만 넣는다
+    summary = {
+        **record,
+        "skills": {
+            name: {**item, "cases": [_without_outputs(c) for c in item["cases"]]}
+            for name, item in report.items()
+        },
+        "results_path": str(saved),
+    }
+    print(json.dumps(summary, ensure_ascii=False))
     return {"PASS": 0, "FAIL": 1, "BUDGET": 3}[verdict]
+
+
+def _without_outputs(case: dict[str, Any]) -> dict[str, Any]:
+    return {k: v for k, v in case.items() if k != "run_outputs"}
+
+
+def save_record(root: Path, record: dict[str, Any]) -> Path:
+    """실행별 출력까지 담은 평가 기록을 evals/results/에 남긴다 (커밋하지 않는 폴더)."""
+    folder = root / "evals" / "results"
+    folder.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S-%f")
+    path = folder / f"{stamp}-{'-'.join(record['skills']) or 'none'}.json"
+    path.write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return path
 
 
 if __name__ == "__main__":
