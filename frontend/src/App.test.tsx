@@ -10,7 +10,11 @@ describe("App", () => {
   it("shows the product name and the backend status", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => new Response(JSON.stringify({ status: "ok", model: "fake" }))),
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+        const body = url.endsWith("/api/health") ? { status: "ok", model: "fake" } : [];
+        return new Response(JSON.stringify(body));
+      }),
     );
     render(<App />);
     expect(screen.getByRole("heading", { name: "Randomy" })).toBeInTheDocument();
