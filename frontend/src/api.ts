@@ -24,3 +24,33 @@ export async function fetchNote(id: number): Promise<Note> {
   }
   return (await response.json()) as Note;
 }
+
+export type Todo = {
+  id: number;
+  note_id: number;
+  task: string;
+  owner: string | null;
+  due: string | null;
+  done: boolean;
+  created_at: string;
+};
+
+export async function fetchTodos(): Promise<Todo[]> {
+  const response = await fetch("/api/todos");
+  if (!response.ok) {
+    throw new Error(`todos ${response.status}`);
+  }
+  return (await response.json()) as Todo[];
+}
+
+export async function updateTodoDone(id: number, done: boolean): Promise<Todo> {
+  const response = await fetch(`/api/todos/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ done }),
+  });
+  if (!response.ok) {
+    throw new Error(`todo ${response.status}`);
+  }
+  return (await response.json()) as Todo;
+}
