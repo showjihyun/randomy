@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from randomy.model import get_model
+from randomy.model import ModelError, get_model
 from randomy.settings import Settings
 
 SKILLS_DIR = Path(__file__).resolve().parents[3] / "skills"
@@ -45,9 +45,14 @@ def main(argv: list[str] | None = None) -> int:
         print(f"오류: 스킬이 없습니다: {args.skill} ({instructions})")
         return 2
     model = get_model(Settings.from_env())
-    completion = model.complete(
-        instructions.read_text(encoding="utf-8"), args.input.read_text(encoding="utf-8")
-    )
+    try:
+        completion = model.complete(
+            instructions.read_text(encoding="utf-8"), args.input.read_text(encoding="utf-8")
+        )
+    except ModelError as error:
+        # 결과 JSON을 내지 않으므로 평가는 이 실행을 '실행기 오류'로 기록한다
+        print(f"오류: 모델 호출 실패: {error}", file=sys.stderr)
+        return 1
     result = {
         "skill": args.skill,
         "output": parse_output(completion.text),
