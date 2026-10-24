@@ -91,6 +91,26 @@ def skill_result(result: dict[str, object], skill: str) -> dict[str, object]:
     return value
 
 
+def test_each_run_output_is_saved_for_later_inspection(
+    root: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # 실패 원인을 다시 돌려 보지 않고 볼 수 있게 실행마다 출력과 문제를 남긴다 (H7)
+    add_case(root, "notes", "c1", "TWO_OF_THREE")
+    add_case(root, "notes", "c2", "CRASH")
+    code, result = evaluate(root, capsys)
+    saved = Path(str(result["results_path"]))
+    assert saved.parent == root / "evals" / "results"
+    record = json.loads(saved.read_text(encoding="utf-8"))
+    runs = record["skills"]["notes"]["cases"][0]["run_outputs"]
+    assert [r["passed"] for r in runs] == [True, True, False]
+    assert runs[2]["output"]["decisions"] == []
+    assert "꼭 들어갈 내용 없음: 배포는 금요일" in runs[2]["problems"]
+    crashed = record["skills"]["notes"]["cases"][1]["run_outputs"]
+    assert crashed[0]["output"] is None and "실행기 오류" in crashed[0]["problems"][0]
+    # 화면에 찍는 요약에는 출력 전문을 넣지 않는다
+    assert "run_outputs" not in json.dumps(result, ensure_ascii=False)
+
+
 def test_all_cases_passing_is_pass(root: Path, capsys: pytest.CaptureFixture[str]) -> None:
     add_case(root, "notes", "c1", "회의록 1")
     add_case(root, "notes", "c2", "회의록 2")
