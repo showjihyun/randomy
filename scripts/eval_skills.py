@@ -9,6 +9,9 @@
   - fields: 출력(JSON 객체)에 있어야 하는 필드
   - contains: 출력에 꼭 들어갈 내용 (결정 사항, 할 일 등)
   - absent: 원문에 없어 나오면 안 되는 내용. 나오면 지어내기로 센다
+  - absent_in: `{"<필드>": [...]}` 그 필드에만 나오면 안 되는 내용 (예: 보류된 안건이
+    decisions에 들어감). 다른 필드에서 언급하는 것은 괜찮다. 나오면 지어내기로 센다
+- 실행기가 실패하면(JSON 출력 없음) 그 실행은 실패로 기록하고 평가는 계속한다.
 - 실행 1회 통과 = 위 조건 모두 만족. 케이스 통과 = `--runs`회 중 `--min-pass`회 이상.
 - 스킬 통과 = 케이스 통과율 90% 이상 + 지어내기 0건.
 - 평가 1회 비용이 `--budget-usd`를 넘으면 그 자리에서 멈추고 BUDGET으로 끝낸다.
@@ -82,7 +85,7 @@ def run_skill(root: Path, skill: str, text: str) -> tuple[Any, float]:
         ) from error
 
 
-def check_run(output: Any, expect: dict[str, list[str]]) -> tuple[list[str], int]:
+def check_run(output: Any, expect: dict[str, Any]) -> tuple[list[str], int]:
     """실행 1회의 문제 목록과 지어내기 수."""
     problems = []
     if not isinstance(output, dict):
@@ -93,6 +96,15 @@ def check_run(output: Any, expect: dict[str, list[str]]) -> tuple[list[str], int
     problems += [f"꼭 들어갈 내용 없음: {c}" for c in expect.get("contains", []) if c not in text]
     fabricated = [a for a in expect.get("absent", []) if a in text]
     problems += [f"지어낸 내용: {a}" for a in fabricated]
+    # 칸별 검사: 보류·기각된 안건이 결정 사항 칸에 들어가는 것처럼, 다른 칸에서는 맞는 말이
+    # 특정 칸에서는 지어내기인 경우 (요약의 "휴교는 하지 않기로 함"은 통과)
+    for field, items in expect.get("absent_in", {}).items():
+        if not isinstance(output, dict) or field not in output:
+            continue
+        field_text = json.dumps(output[field], ensure_ascii=False)
+        leaked = [a for a in items if a in field_text]
+        problems += [f"{field}에 나오면 안 되는 내용: {a}" for a in leaked]
+        fabricated += leaked
     return problems, len(fabricated)
 
 
@@ -106,7 +118,13 @@ def evaluate_skill(
         passed = fabrications = 0
         problems: list[str] = []
         for _ in range(runs):
-            output, cost = run_skill(root, skill, case["input"])
+            try:
+                output, cost = run_skill(root, skill, case["input"])
+            except RuntimeError as error:
+                # 실행기가 죽어도 평가는 계속하고, 그 실행은 실패로 기록한다
+                run_problems = [f"실행기 오류: {error}"]
+                problems += [p for p in run_problems if p not in problems]
+                continue
             spent[0] += cost
             run_problems, fabricated = check_run(output, case.get("expect", {}))
             passed += not run_problems
