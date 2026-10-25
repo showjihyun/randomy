@@ -1,7 +1,7 @@
 {
   "source": "showjihyun/EIFactory",
-  "engine": "factory-v5",
-  "engine_commit": "29b6b83faf3535b644545ed57ce0acc585a7f1b4",
+  "engine": "factory-v6",
+  "engine_commit": "f52df753d0d49780ca652d70d6f121a28c76b8f8",
   "engine_files": {
     "scripts/factory.py": "7d6c12964edab715e6465171f6ae0239fe555b64739449332ea6dce90b2c3b1f",
     "scripts/factory_config.py": "32db3712f888e8c5b3a57c90b419594dd824fecbf3fb8a4306a7a9f3869831af",
@@ -9,7 +9,7 @@
     "scripts/issues.py": "8443c6162b0ba99e08921456bf08101bdf5157219bb3c58cb7224c34ee351ace",
     "scripts/factory_settings.py": "1ee116eb7752c2c08e44508cc0fef7e4a13cfe09172d934d55c994f3c714d0dc",
     "scripts/monitor.py": "2573f753ec5d302977146fce67c782376e37bd6929f78bc255a93e7330172759",
-    "scripts/monitor_page.html": "4984fd5567471b0cbcab290684cbbd09e4565ad292310bb4cb71e962d5958477",
+    "scripts/monitor_page.html": "0e5e59446fae01140bd22a7ed7a766fa597926ba4b24150f72f8691d180a75a0",
     "scripts/monitor_assets/bolt_QUEUED.png": "873d260ef16d711424673c68ce6e45ee5c16b738a8a773e657ac58d858dc6ba3",
     "scripts/monitor_assets/bolt_SPEC_READY.png": "81c9066b34f7920d5adc4d1b9ffd5ce6393f39a011d0b116c67cb856013f6a17",
     "scripts/monitor_assets/bolt_BUILDING.png": "7a60c028163701dbe873864feb67b279e8a4a1c5781d2562f6541ddf2fd12491",
