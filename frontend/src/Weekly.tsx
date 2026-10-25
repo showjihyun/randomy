@@ -10,21 +10,24 @@ function shiftDate(date: string, days: number): string {
 export default function Weekly({ onOpenNote }: { onOpenNote: (id: number) => void }) {
   const [week, setWeek] = useState<WeeklyResult | null>(null);
   const [failed, setFailed] = useState(false);
-  const [request, setRequest] = useState<string | undefined>(undefined);
+  const [request, setRequest] = useState<{ date: string | undefined }>({ date: undefined });
+  const [settled, setSettled] = useState<object | null>(null);
+  const loading = settled !== request;
 
   useEffect(() => {
     let active = true;
-    fetchWeekly(request)
+    fetchWeekly(request.date)
       .then((result) => {
         if (active) {
           setFailed(false);
+          setSettled(request);
           setWeek(result);
         }
       })
       .catch(() => {
         if (active) {
-          setWeek(null);
           setFailed(true);
+          setSettled(request);
         }
       });
     return () => {
@@ -32,21 +35,41 @@ export default function Weekly({ onOpenNote }: { onOpenNote: (id: number) => voi
     };
   }, [request]);
 
-  if (failed) {
-    return <p role="alert">주간 정리를 불러오지 못했습니다</p>;
-  }
+  const status = (
+    <>
+      {loading && <p>불러오는 중…</p>}
+      {failed && !loading && (
+        <div role="alert">
+          <p>주간 정리를 불러오지 못했습니다</p>
+          <button type="button" onClick={() => setRequest({ date: request.date })}>
+            다시 시도
+          </button>
+        </div>
+      )}
+    </>
+  );
+
   if (week === null) {
-    return null;
+    return status;
   }
 
   return (
     <div>
+      {status}
       <div>
-        <button type="button" onClick={() => setRequest(shiftDate(week.start, -7))}>
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => setRequest({ date: shiftDate(week.start, -7) })}
+        >
           지난주
         </button>
         <span>{`${week.start} ~ ${week.end}`}</span>
-        <button type="button" onClick={() => setRequest(shiftDate(week.start, 7))}>
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => setRequest({ date: shiftDate(week.start, 7) })}
+        >
           다음 주
         </button>
       </div>

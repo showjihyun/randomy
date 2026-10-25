@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ApiError, ask, search, type AskResult, type SearchResult } from "./api";
 
 type Props = { onOpenNote: (id: number) => void };
@@ -17,18 +17,33 @@ export default function Search({ onOpenNote }: Props) {
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState<SearchResult | null>(null);
   const [answer, setAnswer] = useState<AskResult | null>(null);
-  const [failure, setFailure] = useState<Failure | null>(null);
+  const [searchFailure, setSearchFailure] = useState<Failure | null>(null);
+  const [askFailure, setAskFailure] = useState<Failure | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [asking, setAsking] = useState(false);
+  const searchSeq = useRef(0);
+  const askSeq = useRef(0);
 
   function runSearch() {
     if (q.trim() === "") {
       return;
     }
-    setFailure(null);
+    const seq = ++searchSeq.current;
+    setSearchFailure(null);
+    setResult(null);
+    setSearching(true);
     search(q)
-      .then((data) => setResult(data))
+      .then((data) => {
+        if (seq === searchSeq.current) {
+          setResult(data);
+          setSearching(false);
+        }
+      })
       .catch((error: unknown) => {
-        setResult(null);
-        setFailure(toFailure("검색하지 못했습니다", error));
+        if (seq === searchSeq.current) {
+          setSearchFailure(toFailure("검색하지 못했습니다", error));
+          setSearching(false);
+        }
       });
   }
 
@@ -36,13 +51,42 @@ export default function Search({ onOpenNote }: Props) {
     if (question.trim() === "") {
       return;
     }
-    setFailure(null);
+    const seq = ++askSeq.current;
+    setAskFailure(null);
+    setAnswer(null);
+    setAsking(true);
     ask(question)
-      .then((data) => setAnswer(data))
+      .then((data) => {
+        if (seq === askSeq.current) {
+          setAnswer(data);
+          setAsking(false);
+        }
+      })
       .catch((error: unknown) => {
-        setAnswer(null);
-        setFailure(toFailure("질문하지 못했습니다", error));
+        if (seq === askSeq.current) {
+          setAskFailure(toFailure("질문하지 못했습니다", error));
+          setAsking(false);
+        }
       });
+  }
+
+  function renderFailure(failure: Failure | null) {
+    if (failure === null) {
+      return null;
+    }
+    return (
+      <div role="alert">
+        <p>{failure.title}</p>
+        {failure.message !== "" && <p>{failure.message}</p>}
+        {failure.problems.length > 0 && (
+          <ul>
+            {failure.problems.map((problem, index) => (
+              <li key={index}>{problem}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
   }
 
   const noteCount = result?.notes.length ?? 0;
@@ -60,7 +104,7 @@ export default function Search({ onOpenNote }: Props) {
           검색어
           <input value={q} onChange={(e) => setQ(e.target.value)} />
         </label>
-        <button type="submit" disabled={q.trim() === ""}>
+        <button type="submit" disabled={q.trim() === "" || searching}>
           검색
         </button>
       </form>
@@ -74,23 +118,14 @@ export default function Search({ onOpenNote }: Props) {
           질문
           <input value={question} onChange={(e) => setQuestion(e.target.value)} />
         </label>
-        <button type="submit" disabled={question.trim() === ""}>
+        <button type="submit" disabled={question.trim() === "" || asking}>
           질문
         </button>
       </form>
-      {failure !== null && (
-        <div role="alert">
-          <p>{failure.title}</p>
-          {failure.message !== "" && <p>{failure.message}</p>}
-          {failure.problems.length > 0 && (
-            <ul>
-              {failure.problems.map((problem, index) => (
-                <li key={index}>{problem}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+      {searching && <p>검색 중…</p>}
+      {asking && <p>답변을 만드는 중…</p>}
+      {renderFailure(searchFailure)}
+      {renderFailure(askFailure)}
       {result !== null && noteCount === 0 && decisionCount === 0 && <p>없음</p>}
       {result !== null && (noteCount > 0 || decisionCount > 0) && (
         <>
