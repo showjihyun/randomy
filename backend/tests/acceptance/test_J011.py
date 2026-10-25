@@ -18,12 +18,15 @@ DECISION_FIELDS = {"id", "note_id", "note_title", "text", "created_at"}
 TODO_FIELDS = {"id", "note_id", "task", "owner", "due", "done", "created_at"}
 
 # 2026-10-19(월) ~ 2026-10-25(일) 주
-MONDAY = "2026-10-19T00:00:00+00:00"
+# 주 소속은 서버 로컬 시간대 날짜로 판단하므로(J019),
+# 시간대와 관계없이 같은 날짜가 되도록 UTC 정오를 쓴다.
+# 자정 경계는 test_J019.py가 시간대를 지정해 확인한다.
+MONDAY = "2026-10-19T12:00:00+00:00"
 WEDNESDAY = "2026-10-21T09:30:00+00:00"
-SUNDAY = "2026-10-25T23:59:59+00:00"
+SUNDAY = "2026-10-25T12:00:00+00:00"
 LAST_WEEK = "2026-10-14T10:00:00+00:00"
-LAST_SUNDAY = "2026-10-18T23:59:59+00:00"
-NEXT_MONDAY = "2026-10-26T00:00:00+00:00"
+LAST_SUNDAY = "2026-10-18T12:00:00+00:00"
+NEXT_MONDAY = "2026-10-26T12:00:00+00:00"
 
 
 class NoCallModel:
