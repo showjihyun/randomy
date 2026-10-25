@@ -8,6 +8,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+from randomy.ask import create_ask_router
 from randomy.model import Model, ModelError, get_model
 from randomy.notes import create_notes_router
 from randomy.notes_result import ResultError, parse_result
@@ -58,6 +59,11 @@ def create_app(settings: Settings, model: Model | None = None) -> FastAPI:
     app.include_router(create_organized_router(settings.db_path))
     app.include_router(create_search_router(settings.db_path))
     app.include_router(create_weekly_router(settings.db_path))
+    app.include_router(
+        create_ask_router(
+            settings.db_path, lambda: model if model is not None else get_model(settings)
+        )
+    )
 
     return app
 
