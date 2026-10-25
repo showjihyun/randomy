@@ -11,6 +11,7 @@ import {
 } from "./api";
 import Organize from "./Organize";
 import Search from "./Search";
+import Weekly from "./Weekly";
 
 type View =
   | { kind: "list" }
@@ -25,7 +26,7 @@ export default function App() {
   const [status, setStatus] = useState("서버 확인 중");
   const [notes, setNotes] = useState<Note[] | null>(null);
   const [view, setView] = useState<View>({ kind: "list" });
-  const [tab, setTab] = useState<"notes" | "todos" | "search">("notes");
+  const [tab, setTab] = useState<"notes" | "todos" | "search" | "weekly">("notes");
   const [todos, setTodos] = useState<Todo[] | null>(null);
   const [draftTitle, setDraftTitle] = useState("");
   const [draftBody, setDraftBody] = useState("");
@@ -125,7 +126,17 @@ export default function App() {
         >
           찾기
         </button>
+        <button
+          type="button"
+          onClick={() => {
+            setTab("weekly");
+            setView({ kind: "list" });
+          }}
+        >
+          주간 정리
+        </button>
       </div>
+      {tab === "weekly" && <Weekly onOpenNote={openOriginNote} />}
       {tab === "search" && <Search onOpenNote={openOriginNote} />}
       {tab === "todos" && todos !== null && todos.length === 0 && <p>할 일이 없습니다</p>}
       {tab === "todos" && todos !== null && todos.length > 0 && (
