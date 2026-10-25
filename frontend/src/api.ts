@@ -122,6 +122,31 @@ export async function saveOrganized(payload: OrganizedPayload): Promise<Organize
   return (await response.json()) as OrganizedSaved;
 }
 
+export type SearchNote = { id: number; title: string; snippet: string; created_at: string };
+export type SearchDecision = {
+  id: number;
+  note_id: number;
+  note_title: string;
+  text: string;
+  created_at: string;
+};
+export type SearchResult = { notes: SearchNote[]; decisions: SearchDecision[] };
+export type AskSource = { id: number; title: string; created_at: string };
+export type AskResult = { answer: string; sources: AskSource[] };
+
+export async function search(q: string): Promise<SearchResult> {
+  const response = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+  if (!response.ok) {
+    throw await toApiError(response);
+  }
+  return (await response.json()) as SearchResult;
+}
+
+export async function ask(question: string): Promise<AskResult> {
+  const response = await postJson("/api/ask", { question });
+  return (await response.json()) as AskResult;
+}
+
 export async function updateTodoDone(id: number, done: boolean): Promise<Todo> {
   const response = await fetch(`/api/todos/${id}`, {
     method: "PATCH",
