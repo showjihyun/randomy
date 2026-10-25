@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, tzinfo
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
@@ -41,26 +41,38 @@ def week_range(day: date) -> tuple[date, date]:
     return monday, monday + timedelta(days=6)
 
 
-def weekly(db_path: Path, day: date) -> WeeklyOut:
+def weekly(db_path: Path, day: date | None = None, tz: tzinfo | None = None) -> WeeklyOut:
+    if tz is None:
+        tz = datetime.now().astimezone().tzinfo
+    if day is None:
+        day = datetime.now(tz).date()
     start, end = week_range(day)
     s, e = start.isoformat(), end.isoformat()
+
+    def in_week(created_at: str) -> bool:
+        return start <= datetime.fromisoformat(created_at).astimezone(tz).date() <= end
+
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     try:
-        note_rows = conn.execute(
-            "SELECT n.id, n.title, s.summary, n.created_at FROM notes n "
-            "LEFT JOIN summaries s ON s.note_id = n.id "
-            "WHERE substr(n.created_at, 1, 10) BETWEEN ? AND ? "
-            "ORDER BY n.created_at, n.id",
-            (s, e),
-        ).fetchall()
-        decision_rows = conn.execute(
-            "SELECT d.id, d.note_id, n.title AS note_title, d.text, d.created_at "
-            "FROM decisions d JOIN notes n ON n.id = d.note_id "
-            "WHERE substr(d.created_at, 1, 10) BETWEEN ? AND ? "
-            "ORDER BY d.created_at, d.id",
-            (s, e),
-        ).fetchall()
+        note_rows = [
+            r
+            for r in conn.execute(
+                "SELECT n.id, n.title, s.summary, n.created_at FROM notes n "
+                "LEFT JOIN summaries s ON s.note_id = n.id "
+                "ORDER BY n.created_at, n.id"
+            ).fetchall()
+            if in_week(r["created_at"])
+        ]
+        decision_rows = [
+            r
+            for r in conn.execute(
+                "SELECT d.id, d.note_id, n.title AS note_title, d.text, d.created_at "
+                "FROM decisions d JOIN notes n ON n.id = d.note_id "
+                "ORDER BY d.created_at, d.id"
+            ).fetchall()
+            if in_week(r["created_at"])
+        ]
         todo_rows = conn.execute(
             "SELECT * FROM todos WHERE done = 0 ORDER BY due IS NULL, due, created_at, id"
         ).fetchall()
@@ -114,11 +126,7 @@ def create_weekly_router(db_path: Path) -> APIRouter:
 
     @router.get("/weekly")
     def get_weekly(date: str | None = None) -> WeeklyOut:
-        day = _parse_day(date) if date is not None else _today()
+        day = _parse_day(date) if date is not None else None
         return weekly(db_path, day)
 
     return router
-
-
-def _today() -> date:
-    return date.today()
