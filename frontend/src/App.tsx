@@ -9,13 +9,15 @@ import {
   type Note,
   type Todo,
 } from "./api";
+import Organize from "./Organize";
 
 type View =
   | { kind: "list" }
   | { kind: "loading" }
   | { kind: "detail"; note: Note }
   | { kind: "missing" }
-  | { kind: "form" };
+  | { kind: "form" }
+  | { kind: "organize" };
 
 export default function App() {
   const [status, setStatus] = useState("서버 확인 중");
@@ -135,6 +137,19 @@ export default function App() {
         <button type="button" onClick={openForm}>
           새 노트
         </button>
+      )}
+      {tab === "notes" && view.kind === "list" && (
+        <button type="button" onClick={() => setView({ kind: "organize" })}>
+          정리
+        </button>
+      )}
+      {tab === "notes" && view.kind === "organize" && (
+        <Organize
+          onSaved={(note) => {
+            setNotes((prev) => [note, ...(prev ?? [])]);
+            openNote(note.id);
+          }}
+        />
       )}
       {tab === "notes" && view.kind === "form" && (
         <form
