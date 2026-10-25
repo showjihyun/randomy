@@ -147,6 +147,23 @@ export async function ask(question: string): Promise<AskResult> {
   return (await response.json()) as AskResult;
 }
 
+export type WeeklyResult = {
+  start: string;
+  end: string;
+  notes: { id: number; title: string; summary: string | null; created_at: string }[];
+  decisions: SearchDecision[];
+  open_todos: Todo[];
+};
+
+export async function fetchWeekly(date?: string): Promise<WeeklyResult> {
+  const url = date === undefined ? "/api/weekly" : `/api/weekly?date=${encodeURIComponent(date)}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`weekly ${response.status}`);
+  }
+  return (await response.json()) as WeeklyResult;
+}
+
 export async function updateTodoDone(id: number, done: boolean): Promise<Todo> {
   const response = await fetch(`/api/todos/${id}`, {
     method: "PATCH",
