@@ -15,6 +15,7 @@ from randomy.organized import create_organized_router
 from randomy.search import create_search_router
 from randomy.settings import Settings
 from randomy.todos import create_todos_router
+from randomy.weekly import create_weekly_router
 
 SKILL_PATH = Path(__file__).resolve().parents[3] / "skills" / "meeting-notes" / "SKILL.md"
 
@@ -56,6 +57,7 @@ def create_app(settings: Settings, model: Model | None = None) -> FastAPI:
     app.include_router(create_todos_router(settings.db_path))
     app.include_router(create_organized_router(settings.db_path))
     app.include_router(create_search_router(settings.db_path))
+    app.include_router(create_weekly_router(settings.db_path))
 
     return app
 
