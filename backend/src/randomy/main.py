@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from randomy.model import Model, ModelError, get_model
 from randomy.notes import create_notes_router
 from randomy.notes_result import ResultError, parse_result
+from randomy.organized import create_organized_router
 from randomy.settings import Settings
 from randomy.todos import create_todos_router
 
@@ -52,6 +53,7 @@ def create_app(settings: Settings, model: Model | None = None) -> FastAPI:
 
     app.include_router(create_notes_router(settings.db_path))
     app.include_router(create_todos_router(settings.db_path))
+    app.include_router(create_organized_router(settings.db_path))
 
     return app
 
