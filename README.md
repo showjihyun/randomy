@@ -35,6 +35,8 @@ make verify           # python scripts/verify.py
 make eval-skills      # python scripts/eval_skills.py (모델 호출, 비용 발생)
 make dev-backend      # http://localhost:8000
 make dev-frontend     # http://localhost:5173
+start.cmd             # Windows: 백엔드+프론트엔드를 띄우고 브라우저를 연다 (기본 모델 claude-cli:sonnet)
+start.cmd --no-browser --model fake   # 브라우저 없이, 모델 지정
 ```
 
 모델은 `RANDOMY_MODEL`(기본 `fake`)로 고른다. 실제 모델 연결 전에는 가짜 모델로 돈다.
