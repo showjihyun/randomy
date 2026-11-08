@@ -18,6 +18,13 @@ const older: Note = {
   created_at: "2026-10-22T08:00:00+00:00",
 };
 
+// 글자가 실행 환경의 시간대에 따라 달라지므로 기대값을 화면과 같은 방법으로 계산한다.
+function displayed(iso: string): string {
+  return new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short" }).format(
+    new Date(iso),
+  );
+}
+
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
@@ -78,9 +85,9 @@ describe("J002 노트 목록·상세 화면", () => {
     const items = screen.queryAllByRole("listitem");
     expect(items).toHaveLength(2);
     expect(items[0]).toHaveTextContent("주간 회의");
-    expect(items[0]).toHaveTextContent(newer.created_at);
+    expect(items[0]).toHaveTextContent(displayed(newer.created_at));
     expect(items[1]).toHaveTextContent("아이디어 메모");
-    expect(items[1]).toHaveTextContent(older.created_at);
+    expect(items[1]).toHaveTextContent(displayed(older.created_at));
 
     expect(calledPaths(fetchMock)).toContain("/api/notes");
     await waitForElement(() => screen.queryByText("서버 연결됨 (모델: fake)"));
@@ -104,7 +111,7 @@ describe("J002 노트 목록·상세 화면", () => {
 
     await waitForElement(() => screen.queryByRole("heading", { name: "주간 회의" }));
     expect(screen.queryByText(newer.body)).toBeInTheDocument();
-    expect(screen.queryByText(newer.created_at)).toBeInTheDocument();
+    expect(screen.queryByText(displayed(newer.created_at))).toBeInTheDocument();
     expect(calledPaths(fetchMock)).toContain("/api/notes/2");
     expect(screen.queryByRole("button", { name: /아이디어 메모/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("status")).toHaveTextContent("서버 연결됨 (모델: fake)");
