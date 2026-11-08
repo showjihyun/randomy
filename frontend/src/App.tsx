@@ -17,6 +17,7 @@ import {
   type Note,
   type Todo,
 } from "./api";
+import { formatDateTime } from "@/lib/format";
 import Organize from "./Organize";
 import Search from "./Search";
 import Weekly from "./Weekly";
@@ -250,7 +251,7 @@ export default function App() {
                             dateTime={note.created_at}
                             className="text-xs font-normal text-muted-foreground"
                           >
-                            {note.created_at}
+                            {formatDateTime(note.created_at)}
                           </time>
                         </Button>
                       </li>
@@ -315,7 +316,7 @@ export default function App() {
               <div className="space-y-1">
                 <h2 className={PAGE_TITLE}>{view.note.title}</h2>
                 <time dateTime={view.note.created_at} className="text-xs text-muted-foreground">
-                  {view.note.created_at}
+                  {formatDateTime(view.note.created_at)}
                 </time>
               </div>
               <Card className="p-6">

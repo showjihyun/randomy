@@ -52,6 +52,13 @@ const doneTodo = {
   created_at: "2026-10-23T09:40:00+00:00",
 };
 
+// 글자가 실행 환경의 시간대에 따라 달라지므로 기대값을 화면과 같은 방법으로 계산한다.
+function displayed(iso: string): string {
+  return new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short" }).format(
+    new Date(iso),
+  );
+}
+
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
@@ -338,7 +345,7 @@ describe("J025 노트 화면 디자인", () => {
     expect(classesOf(row)).toContain("hover:bg-accent");
     expectClasses(within(row).queryByText(note.title), ["font-medium"]);
 
-    const date = within(row).queryByText(note.created_at);
+    const date = within(row).queryByText(displayed(note.created_at));
     expect(date?.tagName).toBe("TIME");
     expectClasses(date, MUTED_SMALL);
     expect(
@@ -405,7 +412,7 @@ describe("J025 노트 화면 디자인", () => {
     await waitForElement(() => heading(note.title, 2));
 
     expectPageTitle(heading(note.title, 2));
-    const date = screen.queryByText(note.created_at);
+    const date = screen.queryByText(displayed(note.created_at));
     expect(date?.tagName).toBe("TIME");
     expectClasses(date, MUTED_SMALL);
 
