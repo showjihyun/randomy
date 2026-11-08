@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from randomy.main import create_app
 from randomy.settings import Settings
 
-TODO_FIELDS = {"id", "note_id", "task", "owner", "due", "done", "created_at"}
+TODO_FIELDS = {"id", "note_id", "task", "owner", "due", "done", "created_at", "due_date"}
 
 
 def _note(client: TestClient, title: str = "회의") -> dict[str, Any]:

@@ -15,7 +15,7 @@ from randomy.settings import Settings
 WEEKLY_FIELDS = {"start", "end", "notes", "decisions", "open_todos"}
 NOTE_FIELDS = {"id", "title", "summary", "created_at"}
 DECISION_FIELDS = {"id", "note_id", "note_title", "text", "created_at"}
-TODO_FIELDS = {"id", "note_id", "task", "owner", "due", "done", "created_at"}
+TODO_FIELDS = {"id", "note_id", "task", "owner", "due", "done", "created_at", "due_date"}
 
 # 2026-10-19(월) ~ 2026-10-25(일) 주
 # 주 소속은 서버 로컬 시간대 날짜로 판단하므로(J019),

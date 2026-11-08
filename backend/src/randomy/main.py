@@ -9,6 +9,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from randomy.ask import create_ask_router
+from randomy.calendar_view import create_calendar_router
 from randomy.model import Model, ModelError, get_model
 from randomy.notes import create_notes_router
 from randomy.notes_result import ResultError, parse_result
@@ -55,6 +56,7 @@ def create_app(settings: Settings, model: Model | None = None) -> FastAPI:
         return {"status": "ok", "model": settings.model}
 
     app.include_router(create_notes_router(settings.db_path))
+    app.include_router(create_calendar_router(settings.db_path))
     app.include_router(create_todos_router(settings.db_path))
     app.include_router(create_organized_router(settings.db_path))
     app.include_router(create_search_router(settings.db_path))

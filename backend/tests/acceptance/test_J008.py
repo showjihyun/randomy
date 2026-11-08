@@ -13,7 +13,7 @@ from randomy.settings import Settings
 
 NOTE_FIELDS = {"id", "title", "body", "created_at"}
 DECISION_FIELDS = {"id", "note_id", "text", "created_at"}
-TODO_FIELDS = {"id", "note_id", "task", "owner", "due", "done", "created_at"}
+TODO_FIELDS = {"id", "note_id", "task", "owner", "due", "done", "created_at", "due_date"}
 
 PAYLOAD: dict[str, Any] = {
     "title": "주간 회의",

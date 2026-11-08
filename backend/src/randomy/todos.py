@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import sqlite3
-from datetime import UTC, datetime
+from datetime import UTC, datetime, tzinfo
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
+
+from randomy.due_dates import parse_due
 
 
 class TodoIn(BaseModel):
@@ -28,6 +30,7 @@ class TodoOut(BaseModel):
     due: str | None
     done: bool
     created_at: str
+    due_date: str | None
 
 
 def _connect(db_path: Path) -> sqlite3.Connection:
@@ -55,7 +58,11 @@ def _init_db(db_path: Path) -> None:
         conn.close()
 
 
-def _to_todo(row: sqlite3.Row) -> TodoOut:
+def to_todo_out(row: sqlite3.Row, note_created_at: str, tz: tzinfo | None) -> TodoOut:
+    """할 일 행을 응답으로 바꾼다. due_date의 기준일은 노트 작성일(tz 로컬)이다."""
+    zone = tz if tz is not None else datetime.now().astimezone().tzinfo
+    base = datetime.fromisoformat(note_created_at).astimezone(zone).date()
+    parsed = parse_due(row["due"], base)
     return TodoOut(
         id=row["id"],
         note_id=row["note_id"],
@@ -64,10 +71,17 @@ def _to_todo(row: sqlite3.Row) -> TodoOut:
         due=row["due"],
         done=bool(row["done"]),
         created_at=row["created_at"],
+        due_date=parsed.isoformat() if parsed is not None else None,
     )
 
 
-def create_todos_router(db_path: Path) -> APIRouter:
+TODO_SELECT = (
+    "SELECT t.id, t.note_id, t.task, t.owner, t.due, t.done, t.created_at, "
+    "n.created_at AS note_created_at FROM todos t JOIN notes n ON n.id = t.note_id"
+)
+
+
+def create_todos_router(db_path: Path, tz: tzinfo | None = None) -> APIRouter:
     _init_db(db_path)
     router = APIRouter(prefix="/api")
 
@@ -76,7 +90,9 @@ def create_todos_router(db_path: Path) -> APIRouter:
         created_at = datetime.now(UTC).isoformat()
         conn = _connect(db_path)
         try:
-            note = conn.execute("SELECT id FROM notes WHERE id = ?", (note_id,)).fetchone()
+            note = conn.execute(
+                "SELECT id, created_at FROM notes WHERE id = ?", (note_id,)
+            ).fetchone()
             if note is None:
                 raise HTTPException(status_code=404, detail="note not found")
             with conn:
@@ -86,32 +102,25 @@ def create_todos_router(db_path: Path) -> APIRouter:
                     (note_id, todo.task, todo.owner, todo.due, created_at),
                 )
             todo_id = cur.lastrowid
+            assert todo_id is not None
+            row = conn.execute(f"{TODO_SELECT} WHERE t.id = ?", (todo_id,)).fetchone()
         finally:
             conn.close()
-        assert todo_id is not None
-        return TodoOut(
-            id=todo_id,
-            note_id=note_id,
-            task=todo.task,
-            owner=todo.owner,
-            due=todo.due,
-            done=False,
-            created_at=created_at,
-        )
+        return to_todo_out(row, row["note_created_at"], tz)
 
     @router.get("/todos")
     def list_todos(done: bool | None = None) -> list[TodoOut]:
         conn = _connect(db_path)
         try:
             if done is None:
-                rows = conn.execute("SELECT * FROM todos ORDER BY done ASC, id DESC").fetchall()
+                rows = conn.execute(f"{TODO_SELECT} ORDER BY t.done ASC, t.id DESC").fetchall()
             else:
                 rows = conn.execute(
-                    "SELECT * FROM todos WHERE done = ? ORDER BY id DESC", (int(done),)
+                    f"{TODO_SELECT} WHERE t.done = ? ORDER BY t.id DESC", (int(done),)
                 ).fetchall()
         finally:
             conn.close()
-        return [_to_todo(r) for r in rows]
+        return [to_todo_out(r, r["note_created_at"], tz) for r in rows]
 
     @router.patch("/todos/{todo_id}")
     def update_todo(todo_id: int, body: TodoDone) -> TodoOut:
@@ -123,9 +132,9 @@ def create_todos_router(db_path: Path) -> APIRouter:
                 )
             if cur.rowcount == 0:
                 raise HTTPException(status_code=404, detail="todo not found")
-            row = conn.execute("SELECT * FROM todos WHERE id = ?", (todo_id,)).fetchone()
+            row = conn.execute(f"{TODO_SELECT} WHERE t.id = ?", (todo_id,)).fetchone()
         finally:
             conn.close()
-        return _to_todo(row)
+        return to_todo_out(row, row["note_created_at"], tz)
 
     return router

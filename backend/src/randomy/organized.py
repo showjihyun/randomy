@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 import sqlite3
-from datetime import UTC, datetime
+from datetime import UTC, datetime, tzinfo
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from randomy.notes import NoteOut
-from randomy.todos import TodoIn, TodoOut
+from randomy.todos import TODO_SELECT, TodoIn, TodoOut, to_todo_out
 
 
 class OrganizedIn(BaseModel):
@@ -73,7 +73,7 @@ def _to_decision(row: sqlite3.Row) -> DecisionOut:
     )
 
 
-def create_organized_router(db_path: Path) -> APIRouter:
+def create_organized_router(db_path: Path, tz: tzinfo | None = None) -> APIRouter:
     _init_db(db_path)
     router = APIRouter(prefix="/api")
 
@@ -113,17 +113,8 @@ def create_organized_router(db_path: Path) -> APIRouter:
                         (note_id, todo.task, todo.owner, todo.due, created_at),
                     )
                     assert cur.lastrowid is not None
-                    todos.append(
-                        TodoOut(
-                            id=cur.lastrowid,
-                            note_id=note_id,
-                            task=todo.task,
-                            owner=todo.owner,
-                            due=todo.due,
-                            done=False,
-                            created_at=created_at,
-                        )
-                    )
+                    row = conn.execute(f"{TODO_SELECT} WHERE t.id = ?", (cur.lastrowid,)).fetchone()
+                    todos.append(to_todo_out(row, row["note_created_at"], tz))
         finally:
             conn.close()
         return OrganizedOut(

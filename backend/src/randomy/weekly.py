@@ -9,7 +9,7 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from randomy.todos import TodoOut
+from randomy.todos import TODO_SELECT, TodoOut, to_todo_out
 
 
 class WeeklyNote(BaseModel):
@@ -74,7 +74,7 @@ def weekly(db_path: Path, day: date | None = None, tz: tzinfo | None = None) -> 
             if in_week(r["created_at"])
         ]
         todo_rows = conn.execute(
-            "SELECT * FROM todos WHERE done = 0 ORDER BY due IS NULL, due, created_at, id"
+            f"{TODO_SELECT} WHERE t.done = 0 ORDER BY t.due IS NULL, t.due, t.created_at, t.id"
         ).fetchall()
     finally:
         conn.close()
@@ -97,18 +97,7 @@ def weekly(db_path: Path, day: date | None = None, tz: tzinfo | None = None) -> 
             )
             for r in decision_rows
         ],
-        open_todos=[
-            TodoOut(
-                id=r["id"],
-                note_id=r["note_id"],
-                task=r["task"],
-                owner=r["owner"],
-                due=r["due"],
-                done=bool(r["done"]),
-                created_at=r["created_at"],
-            )
-            for r in todo_rows
-        ],
+        open_todos=[to_todo_out(r, r["note_created_at"], tz) for r in todo_rows],
     )
 
 
@@ -121,12 +110,12 @@ def _parse_day(value: str) -> date:
         raise HTTPException(status_code=422, detail="date must be a real date") from error
 
 
-def create_weekly_router(db_path: Path) -> APIRouter:
+def create_weekly_router(db_path: Path, tz: tzinfo | None = None) -> APIRouter:
     router = APIRouter(prefix="/api")
 
     @router.get("/weekly")
     def get_weekly(date: str | None = None) -> WeeklyOut:
         day = _parse_day(date) if date is not None else None
-        return weekly(db_path, day)
+        return weekly(db_path, day, tz)
 
     return router
