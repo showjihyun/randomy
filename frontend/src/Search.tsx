@@ -1,4 +1,11 @@
 import { useRef, useState } from "react";
+import { Loader2 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { ApiError, ask, search, type AskResult, type SearchResult } from "./api";
 
 type Props = { onOpenNote: (id: number) => void };
@@ -75,17 +82,43 @@ export default function Search({ onOpenNote }: Props) {
       return null;
     }
     return (
-      <div role="alert">
-        <p>{failure.title}</p>
-        {failure.message !== "" && <p>{failure.message}</p>}
-        {failure.problems.length > 0 && (
-          <ul>
-            {failure.problems.map((problem, index) => (
-              <li key={index}>{problem}</li>
-            ))}
-          </ul>
-        )}
+      <Alert variant="destructive">
+        <AlertTitle>{failure.title}</AlertTitle>
+        <AlertDescription>
+          {failure.message !== "" && <p>{failure.message}</p>}
+          {failure.problems.length > 0 && (
+            <ul>
+              {failure.problems.map((problem, index) => (
+                <li key={index}>{problem}</li>
+              ))}
+            </ul>
+          )}
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  function renderEmpty() {
+    return (
+      <div className="rounded-lg border border-dashed p-8 text-center">
+        <p className="text-sm text-muted-foreground">없음</p>
       </div>
+    );
+  }
+
+  function renderRow(key: number, title: string, detail: string, noteId: number) {
+    return (
+      <li key={key}>
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-auto w-full flex-col items-start justify-start gap-0.5 whitespace-normal text-left"
+          onClick={() => onOpenNote(noteId)}
+        >
+          <span className="font-medium">{title}</span>
+          <span className="text-xs text-muted-foreground">{detail}</span>
+        </Button>
+      </li>
     );
   }
 
@@ -93,83 +126,108 @@ export default function Search({ onOpenNote }: Props) {
   const decisionCount = result?.decisions.length ?? 0;
 
   return (
-    <div>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          runSearch();
-        }}
-      >
-        <label>
-          검색어
-          <input value={q} onChange={(e) => setQ(e.target.value)} />
-        </label>
-        <button type="submit" disabled={q.trim() === "" || searching}>
-          검색
-        </button>
-      </form>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          runAsk();
-        }}
-      >
-        <label>
-          질문
-          <input value={question} onChange={(e) => setQuestion(e.target.value)} />
-        </label>
-        <button type="submit" disabled={question.trim() === "" || asking}>
-          질문
-        </button>
-      </form>
-      {searching && <p>검색 중…</p>}
-      {asking && <p>답변을 만드는 중…</p>}
+    <div className="flex flex-col gap-6">
+      <Card className="px-6">
+        <form
+          className="flex flex-col gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            runSearch();
+          }}
+        >
+          <Label htmlFor="search-q">검색어</Label>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Input id="search-q" value={q} onChange={(e) => setQ(e.target.value)} />
+            <Button type="submit" disabled={q.trim() === "" || searching}>
+              {searching && <Loader2 className="animate-spin" />}
+              검색
+            </Button>
+          </div>
+        </form>
+        <Separator />
+        <form
+          className="flex flex-col gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            runAsk();
+          }}
+        >
+          <Label htmlFor="search-question">질문</Label>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Input
+              id="search-question"
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+            />
+            <Button type="submit" disabled={question.trim() === "" || asking}>
+              {asking && <Loader2 className="animate-spin" />}
+              질문
+            </Button>
+          </div>
+        </form>
+      </Card>
+      {searching && <p className="text-sm text-muted-foreground">검색 중…</p>}
+      {asking && <p className="text-sm text-muted-foreground">답변을 만드는 중…</p>}
       {renderFailure(searchFailure)}
       {renderFailure(askFailure)}
-      {result !== null && noteCount === 0 && decisionCount === 0 && <p>없음</p>}
+      {result !== null && noteCount === 0 && decisionCount === 0 && renderEmpty()}
       {result !== null && (noteCount > 0 || decisionCount > 0) && (
         <>
           <section aria-label="노트 결과">
-            {noteCount === 0 ? (
-              <p>없음</p>
-            ) : (
-              <ul>
-                {result.notes.map((note) => (
-                  <li key={note.id}>
-                    <button type="button" onClick={() => onOpenNote(note.id)}>
-                      <span>{note.title}</span> <span>{note.snippet}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <Card className="px-2">
+              {noteCount === 0 ? (
+                renderEmpty()
+              ) : (
+                <ul>
+                  {result.notes.map((note) => renderRow(note.id, note.title, note.snippet, note.id))}
+                </ul>
+              )}
+            </Card>
           </section>
           <section aria-label="결정 사항 결과">
-            {decisionCount === 0 ? (
-              <p>없음</p>
-            ) : (
-              <ul>
-                {result.decisions.map((decision) => (
-                  <li key={decision.id}>
-                    <button type="button" onClick={() => onOpenNote(decision.note_id)}>
-                      <span>{decision.text}</span> <span>{decision.note_title}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <Card className="px-2">
+              {decisionCount === 0 ? (
+                renderEmpty()
+              ) : (
+                <ul>
+                  {result.decisions.map((decision) =>
+                    renderRow(decision.id, decision.text, decision.note_title, decision.note_id),
+                  )}
+                </ul>
+              )}
+            </Card>
           </section>
         </>
       )}
       {answer !== null && (
         <section aria-label="답변">
-          <p>{answer.answer}</p>
-          {answer.sources.length > 0 &&
-            answer.sources.map((source) => (
-              <button key={source.id} type="button" onClick={() => onOpenNote(source.id)}>
-                {source.title}
-              </button>
-            ))}
+          <Card className="px-6">
+            <p
+              className={
+                answer.sources.length > 0
+                  ? "text-sm leading-7"
+                  : "text-sm leading-7 text-muted-foreground"
+              }
+            >
+              {answer.answer}
+            </p>
+            {answer.sources.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-muted-foreground">근거</span>
+                {answer.sources.map((source) => (
+                  <Button
+                    key={source.id}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onOpenNote(source.id)}
+                  >
+                    {source.title}
+                  </Button>
+                ))}
+              </div>
+            )}
+          </Card>
         </section>
       )}
     </div>
