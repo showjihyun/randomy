@@ -55,7 +55,7 @@ shadcn/ui neutral 기본값을 그대로 쓴다. 화면 코드는 토큰 클래�
 
 | 화면 요소 | 컴포넌트 | 규칙 |
 |---|---|---|
-| 탭 4개 (노트, 할 일, 찾기, 주간 정리) | `Button variant="ghost"`, 선택된 탭은 `bg-accent text-accent-foreground font-medium` + `aria-current="page"` | 아이콘: `NotebookPen`, `ListTodo`, `Search`, `CalendarRange` |
+| 탭 5개 (노트, 할 일, 찾기, 주간 정리, 캘린더) | `Button variant="ghost"`, 선택된 탭은 `bg-accent text-accent-foreground font-medium` + `aria-current="page"` | 아이콘: `NotebookPen`, `ListTodo`, `Search`, `CalendarRange`, `CalendarDays`. 1024px 미만 가로 탭 줄은 5개가 한 줄에 들어가도록 글자를 `text-xs`, 360px에서는 아이콘 위·글자 아래로 쌓는다 (v3) |
 | 주 동작 (저장, 정리, 검색, 질문) | `Button` (default) | 화면 구역마다 하나 |
 | 보조 동작 (새 노트, 취소, 목록으로, 원본 노트, 다시 시도, 추가) | `Button variant="outline"` 또는 `"ghost"`, 작은 곳은 `size="sm"` | |
 | 줄 삭제 (결정·할 일 빼기) | `Button variant="ghost" size="sm"`, 글자 유지 | 위험 색은 쓰지 않는다 (되돌릴 수 있는 편집) |
@@ -68,6 +68,9 @@ shadcn/ui neutral 기본값을 그대로 쓴다. 화면 코드는 토큰 클래�
 | 오류 | `Alert variant="destructive"` (`role="alert"` 유지) + 다시 시도 버튼 | |
 | 빈 목록 | 점선 테두리 영역(`border border-dashed rounded-lg p-8 text-center`) + 설명 + 다음 동작 버튼 | 문구는 지금 그대로 ("저장된 노트가 없습니다" 등) |
 | 로딩 | `Skeleton` 3줄, 버튼은 `disabled` + `Loader2 animate-spin` | |
+| 마감 표시 (v3) | 할 일 행의 기한 배지 옆에 해석한 날짜(`due_date`) 기준 상태 `Badge`: 기한 지남 `variant="destructive"` "기한 지남", 오늘 `variant="default"` "오늘", 3일 이내 `variant="outline"` "곧" | 완료한 할 일, `due_date`가 없는 할 일에는 붙이지 않는다. 기한 원문 배지("기한: 금요일")는 그대로 둔다 |
+| 캘린더 월 격자 (v3) | `Card` 안 7열 `grid grid-cols-7`, 요일 머리글(월~일, `text-xs text-muted-foreground`), 날짜 칸은 `button`(접근 가능한 이름: "11월 8일, 노트 2, 할 일 1"처럼 날짜와 개수) | 칸: 위 날짜 숫자(`text-sm`), 아래 항목 점(노트 `bg-primary`, 결정 `bg-muted-foreground`, 할 일 `border border-primary`의 `size-1.5 rounded-full`)과 1024px 이상에서는 첫 항목 제목 한 줄(`truncate text-xs`). 오늘은 숫자에 `bg-primary text-primary-foreground rounded-full`, 선택한 날은 칸에 `bg-accent`, 다른 달 날짜는 `text-muted-foreground/50`. 칸 높이 1024px 이상 `min-h-24`, 그 아래 `min-h-12` |
+| 캘린더 날짜 패널 (v3) | 격자 아래(1024px 이상은 오른쪽 `w-72`) `Card`: 제목 "11월 8일 (토)", 구역 3개(노트, 결정 사항, 기한인 할 일) 목록, 행은 원본 노트를 여는 `Button variant="ghost"` | 빈 날은 점선 영역 "이 날짜에 기록이 없습니다" |
 
 ## 5. 상태
 
@@ -89,9 +92,11 @@ shadcn/ui neutral 기본값을 그대로 쓴다. 화면 코드는 토큰 클래�
 | 할 일 | 추출된 할 일 처리 | 제목 "할 일" → 할 일 목록 Card (미완료 먼저는 범위 밖, 지금 순서 유지) |
 | 찾기 | 검색과 근거 붙은 질문 | 검색 폼(Input + `검색`)과 질문 폼(Input + `질문`)을 Card 하나에 위아래로 → 결과(노트 결과, 결정 사항 결과) → 답변 Card |
 | 주간 정리 | 이번 주 요약 | 주 이동 → Card 3개 |
+| 캘린더 (v3) | 날짜별 노트·결정·기한 있는 할 일 보기 | 위 월 이동 줄(`이전 달`·`다음 달` outline sm + ChevronLeft/Right, 가운데 "2026년 11월" `text-lg font-semibold`, 오른쪽 `오늘` outline sm) → 월 격자 Card + 날짜 패널 Card. 처음 열면 이번 달, 오늘이 선택된 상태. 한 주는 월요일 시작(주간 정리와 같음) |
 
 ## 8. 승인
 
 - 초안: AI(상위 세션), 2026-11-08. 승인: 레포 소유자, 2026-11-08.
 - v2 (2026-11-08): 화면 확인(P003) 뒤 보강: 한국어 줄바꿈, 날짜 표시 형식, 목록 카드 여백, 2열 표. 승인: 레포 소유자, 2026-11-08.
 - v2.1 (2026-11-08): 날짜 표시 형식은 저장 시각에만 적용 (할 일 기한은 사용자가 입력한 글자, 주간 범위는 그대로). 승인: 레포 소유자, 2026-11-08.
+- v3 (2026-11-08): 캘린더 화면과 마감 표시 (PRODUCT.md F5, P005). 승인: 레포 소유자, 2026-11-08.
