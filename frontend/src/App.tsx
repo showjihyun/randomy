@@ -17,6 +17,7 @@ import {
   type Note,
   type Todo,
 } from "./api";
+import { dueStatus } from "@/lib/due";
 import { formatDateTime } from "@/lib/format";
 import Calendar from "./Calendar";
 import Organize from "./Organize";
@@ -36,7 +37,28 @@ function EmptyState({ children }: { children: ReactNode }) {
   return <div className="rounded-lg border border-dashed p-8 text-center">{children}</div>;
 }
 
-const PAGE_TITLE = "text-2xl font-semibold tracking-tight";
+function localDate(): string {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
+function DueBadge({ todo }: { todo: Todo }) {
+  const status = dueStatus(todo.due_date, todo.done, localDate());
+  if (status === "overdue") {
+    return <Badge variant="destructive">기한 지남</Badge>;
+  }
+  if (status === "today") {
+    return <Badge variant="default">오늘</Badge>;
+  }
+  if (status === "soon") {
+    return <Badge variant="outline">곧</Badge>;
+  }
+  return null;
+}
+
+const PAGE_TITLE ="text-2xl font-semibold tracking-tight";
 
 export default function App() {
   const [status, setStatus] = useState("서버 확인 중");
@@ -170,7 +192,7 @@ export default function App() {
               variant="ghost"
               size="sm"
               aria-current={tab === key ? "page" : undefined}
-              className={`flex-1 px-2 lg:flex-none lg:justify-start ${
+              className={`h-auto flex-1 flex-col px-2 text-xs sm:h-8 sm:flex-row lg:flex-none lg:justify-start lg:text-sm ${
                 tab === key ? "bg-accent font-medium text-accent-foreground" : ""
               }`}
               onClick={onClick}
@@ -214,6 +236,7 @@ export default function App() {
                           <Badge variant="secondary">담당: {todo.owner}</Badge>
                         )}
                         {todo.due !== null && <Badge variant="secondary">기한: {todo.due}</Badge>}
+                        <DueBadge todo={todo} />
                         <Button
                           type="button"
                           variant="ghost"
