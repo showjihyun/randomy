@@ -43,6 +43,7 @@ export type Todo = {
   task: string;
   owner: string | null;
   due: string | null;
+  due_date: string | null;
   done: boolean;
   created_at: string;
 };
@@ -162,6 +163,32 @@ export async function fetchWeekly(date?: string): Promise<WeeklyResult> {
     throw new Error(`weekly ${response.status}`);
   }
   return (await response.json()) as WeeklyResult;
+}
+
+export type CalendarResult = {
+  month: string;
+  days: {
+    date: string;
+    notes: { id: number; title: string }[];
+    decisions: { text: string; note_id: number; note_title: string }[];
+    todos: {
+      id: number;
+      task: string;
+      done: boolean;
+      note_id: number;
+      due: string | null;
+      due_date: string;
+    }[];
+  }[];
+};
+
+export async function fetchCalendar(month?: string): Promise<CalendarResult> {
+  const url = month === undefined ? "/api/calendar" : `/api/calendar?month=${month}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`calendar ${response.status}`);
+  }
+  return (await response.json()) as CalendarResult;
 }
 
 export async function updateTodoDone(id: number, done: boolean): Promise<Todo> {
