@@ -45,7 +45,7 @@ shadcn/ui neutral 기본값을 그대로 쓴다. 화면 코드는 토큰 클래�
   - 360px 폭에서 가로 스크롤이 없어야 한다.
 - 상태 문구(`role="status"`)는 본문 위 한 줄, `text-sm text-muted-foreground`. 비어 있으면 자리를 차지하지 않는다.
 - 줄바꿈 (v2): 한국어는 단어 중간에서 끊지 않는다. `body`에 `break-keep`(word-break: keep-all)을 전역으로 걸고, 긴 영문·URL이 들어갈 수 있는 곳(노트 본문, 원문)은 `break-words`를 더한다.
-- 날짜 (v2): 저장 형식(ISO, UTC)은 그대로 두고 화면에서만 로컬 시간으로 바꿔 보여 준다. 형식은 `Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short" })` (예: `2026. 11. 8. 오후 5:20`), 공통 함수 `src/lib/format.ts`의 `formatDateTime`. `<time dateTime>` 속성에는 ISO 원문을 둔다. 날짜만 필요한 곳(주간 범위, 할 일 기한)은 `dateStyle: "medium"`.
+- 날짜 (v2): 저장 형식(ISO, UTC)은 그대로 두고 화면에서만 로컬 시간으로 바꿔 보여 준다. 형식은 `Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short" })` (예: `2026. 11. 8. 오후 5:20`), 공통 함수 `src/lib/format.ts`의 `formatDateTime`. `<time dateTime>` 속성에는 ISO 원문을 둔다. 적용 대상은 저장 시각(노트 `created_at`)뿐이다 (v2.1 정정): 할 일 기한은 사용자가 입력한 글자("금요일" 등)라 그대로 보여 주고, 주간 범위(`YYYY-MM-DD ~ YYYY-MM-DD`)도 그대로 둔다.
 - 카드 여백 (v2): 목록을 담는 `Card`는 위아래 여백을 행이 갖는다. `Card`에 `py-0`(또는 `gap-0`)을 주고 행이 `px-4 py-3`을 가진다. 제목이 있는 카드만 `CardHeader`의 기본 여백을 쓴다.
 - 2열 표 (v2): 제목과 보조 글을 나란히 둘 때 제목 칸은 줄어들지 않게(`shrink-0`, 최소 `min-w-32`) 하고 보조 글이 줄어든다. 좁으면(sm 미만) 위아래로 쌓는다.
 
@@ -94,3 +94,4 @@ shadcn/ui neutral 기본값을 그대로 쓴다. 화면 코드는 토큰 클래�
 
 - 초안: AI(상위 세션), 2026-11-08. 승인: 레포 소유자, 2026-11-08.
 - v2 (2026-11-08): 화면 확인(P003) 뒤 보강: 한국어 줄바꿈, 날짜 표시 형식, 목록 카드 여백, 2열 표. 승인: 레포 소유자, 2026-11-08.
+- v2.1 (2026-11-08): 날짜 표시 형식은 저장 시각에만 적용 (할 일 기한은 사용자가 입력한 글자, 주간 범위는 그대로). 승인: 레포 소유자, 2026-11-08.
