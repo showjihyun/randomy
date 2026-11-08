@@ -114,6 +114,7 @@ export default function Calendar({ onOpenNote }: { onOpenNote: (id: number) => v
           type="button"
           variant="outline"
           size="sm"
+          className="text-xs sm:text-sm"
           onClick={() => {
             const target = shiftMonth(month, -1);
             goMonth(target, `${target}-01`);
@@ -126,6 +127,7 @@ export default function Calendar({ onOpenNote }: { onOpenNote: (id: number) => v
           type="button"
           variant="outline"
           size="sm"
+          className="text-xs sm:text-sm"
           onClick={() => {
             const target = shiftMonth(month, 1);
             goMonth(target, `${target}-01`);
@@ -135,11 +137,12 @@ export default function Calendar({ onOpenNote }: { onOpenNote: (id: number) => v
           <ChevronRight />
         </Button>
       </div>
-      <h2 className="text-lg font-semibold">{`${month.slice(0, 4)}년 ${Number(month.slice(5, 7))}월`}</h2>
+      <h2 className="whitespace-nowrap text-lg font-semibold">{`${month.slice(0, 4)}년 ${Number(month.slice(5, 7))}월`}</h2>
       <Button
         type="button"
         variant="outline"
         size="sm"
+        className="text-xs sm:text-sm"
         onClick={() => {
           const now = localToday();
           goMonth(now.slice(0, 7), now);
