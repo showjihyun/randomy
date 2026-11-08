@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -80,6 +81,13 @@ export default function Weekly({ onOpenNote }: { onOpenNote: (id: number) => voi
     </CardHeader>
   );
 
+  const paddedHeading = (text: string) => <div className="pt-6 pb-3">{heading(text)}</div>;
+
+  const rowClass =
+    "h-auto w-full justify-start whitespace-normal break-words text-left flex-col sm:flex-row items-start px-4 py-3";
+  const titleClass = "shrink-0 min-w-32 font-medium max-w-full sm:max-w-1/2";
+  const secondaryClass = "text-muted-foreground flex-1 min-w-0";
+
   if (week === null) {
     return status;
   }
@@ -112,23 +120,28 @@ export default function Weekly({ onOpenNote }: { onOpenNote: (id: number) => voi
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
         <section aria-label="이번 주 노트">
-          <Card>
-            {heading("이번 주 노트")}
-            <CardContent>
+          <Card className="py-0 gap-0">
+            {paddedHeading("이번 주 노트")}
+            <CardContent className={week.notes.length === 0 ? "px-6 pb-6" : "px-0"}>
               {week.notes.length === 0 ? (
                 empty
               ) : (
-                <ul className="flex flex-col gap-1">
+                <ul className="divide-y">
                   {week.notes.map((note) => (
                     <li key={note.id}>
                       <Button
                         type="button"
                         variant="ghost"
-                        className="h-auto w-full justify-start whitespace-normal break-words text-left"
+                        className={rowClass}
                         onClick={() => onOpenNote(note.id)}
                       >
-                        <span>{note.title}</span>
-                        {note.summary !== null && <span> {note.summary}</span>}
+                        <span className={titleClass}>{note.title}</span>
+                        {note.summary !== null && (
+                          <>
+                            {" "}
+                            <span className={secondaryClass}>{note.summary}</span>
+                          </>
+                        )}
                       </Button>
                     </li>
                   ))}
@@ -138,22 +151,23 @@ export default function Weekly({ onOpenNote }: { onOpenNote: (id: number) => voi
           </Card>
         </section>
         <section aria-label="결정 사항">
-          <Card>
-            {heading("결정 사항")}
-            <CardContent>
+          <Card className="py-0 gap-0">
+            {paddedHeading("결정 사항")}
+            <CardContent className={week.decisions.length === 0 ? "px-6 pb-6" : "px-0"}>
               {week.decisions.length === 0 ? (
                 empty
               ) : (
-                <div className="flex flex-col gap-1">
+                <div className="divide-y">
                   {week.decisions.map((decision) => (
                     <div key={decision.id}>
                       <Button
                         type="button"
                         variant="ghost"
-                        className="h-auto w-full justify-start whitespace-normal break-words text-left"
+                        className={rowClass}
                         onClick={() => onOpenNote(decision.note_id)}
                       >
-                        <span>{decision.text}</span> <span>{decision.note_title}</span>
+                        <span className={titleClass}>{decision.text}</span>{" "}
+                        <span className={secondaryClass}>{decision.note_title}</span>
                       </Button>
                     </div>
                   ))}
@@ -172,10 +186,10 @@ export default function Weekly({ onOpenNote }: { onOpenNote: (id: number) => voi
             ) : (
               <ul className="flex flex-col gap-1">
                 {week.open_todos.map((todo) => (
-                  <li key={todo.id} className="break-words">
+                  <li key={todo.id} className="flex flex-wrap items-center gap-2 break-words">
                     <span>{todo.task}</span>
-                    {todo.owner !== null && <span> 담당: {todo.owner}</span>}
-                    {todo.due !== null && <span> 기한: {todo.due}</span>}
+                    {todo.owner !== null && <Badge variant="secondary">담당: {todo.owner}</Badge>}
+                    {todo.due !== null && <Badge variant="secondary">기한: {todo.due}</Badge>}
                   </li>
                 ))}
               </ul>
