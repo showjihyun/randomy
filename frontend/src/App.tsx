@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { CalendarRange, ListTodo, NotebookPen, Search as SearchIcon } from "lucide-react";
+import { CalendarDays, CalendarRange, ListTodo, NotebookPen, Search as SearchIcon } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import {
   type Todo,
 } from "./api";
 import { formatDateTime } from "@/lib/format";
+import Calendar from "./Calendar";
 import Organize from "./Organize";
 import Search from "./Search";
 import Weekly from "./Weekly";
@@ -41,7 +42,7 @@ export default function App() {
   const [status, setStatus] = useState("서버 확인 중");
   const [notes, setNotes] = useState<Note[] | null>(null);
   const [view, setView] = useState<View>({ kind: "list" });
-  const [tab, setTab] = useState<"notes" | "todos" | "search" | "weekly">("notes");
+  const [tab, setTab] = useState<"notes" | "todos" | "search" | "weekly" | "calendar">("notes");
   const [todos, setTodos] = useState<Todo[] | null>(null);
   const [draftTitle, setDraftTitle] = useState("");
   const [draftBody, setDraftBody] = useState("");
@@ -141,6 +142,15 @@ export default function App() {
         setView({ kind: "list" });
       },
     },
+    {
+      tab: "calendar",
+      label: "캘린더",
+      icon: CalendarDays,
+      onClick: () => {
+        setTab("calendar");
+        setView({ kind: "list" });
+      },
+    },
   ] as const;
 
   return (
@@ -177,6 +187,7 @@ export default function App() {
             {status}
           </p>
           {tab === "weekly" && <Weekly onOpenNote={openOriginNote} />}
+          {tab === "calendar" && <Calendar onOpenNote={openOriginNote} />}
           {tab === "search" && <Search onOpenNote={openOriginNote} />}
           {tab === "todos" && (
             <div className="space-y-4">
