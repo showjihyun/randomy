@@ -1,9 +1,9 @@
 {
   "source": "showjihyun/EIFactory",
-  "engine": "factory-v10",
-  "engine_commit": "5c74c1da0d246fa7368049e98b55bddc2b069fc1",
+  "engine": "factory-v11",
+  "engine_commit": "746260361b33005da919b1b018b9cb99e1f934e9",
   "engine_files": {
-    "scripts/factory.py": "c3d8b7af22e56dc2e113b5bfeae2b84002b7335858eb43c529e1c4334cf1cf48",
+    "scripts/factory.py": "41a2460643ed613f0f22d992afcdfcad938a397cbed13f1dd39ff7c1d8829f34",
     "scripts/factory_config.py": "756c233457a1fd2eaf16aa22763a5667215483e2116ad2ad5462f0454c312692",
     "scripts/dispatch.py": "8fdabba218bf522fd91b1132475007fc9c0342decb87b64735bcd0d5b9c1bed1",
     "scripts/issues.py": "8443c6162b0ba99e08921456bf08101bdf5157219bb3c58cb7224c34ee351ace",
@@ -50,7 +50,7 @@
     "scripts/factory_engine.py": "069cd1d4324cf489b004fa1a7f802745ea9ee0e49ca5d60c4fca1df1b7e0effc",
     "factory/templates/DESIGN.md": "20bcad33edaa07a53d6dfa81ffb91c820c9df5b80e871538a9aebfc5d00dd275",
     "scripts/proc.py": "28faafc32a0f8271a972fba89722565a0c594b3c29071a54d5c1d1b11deaa5d7",
-    "factory/PROCESS.md": "d1c9fa022b7c36067092d9b1c41881fe9dcb00bb1c1dcdfdde350444a7023fe2",
+    "factory/PROCESS.md": "07d10aa648b6403a5c57dba42cc210601ec94cea278fe4e18caf0cf4fc351f65",
     "factory/prompts/builder.md": "56cec21a4bdaf99bfa9ae17170e436548f889b356f93b2928738a84d84542980",
     ".claude/skills/factory/SKILL.md": "62d381d01e3b649d67dc18268b60883cf43d053f3a84c513771be742d0ecba3e",
     ".claude/agents/builder.md": "3465adcb160184a2f8056b9d29773452be66cdb75a18738f66463b7dc912c04f",
