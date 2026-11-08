@@ -112,7 +112,7 @@ export default function Search({ onOpenNote }: Props) {
         <Button
           type="button"
           variant="ghost"
-          className="h-auto w-full flex-col items-start justify-start gap-0.5 whitespace-normal text-left"
+          className="h-auto w-full flex-col items-start justify-start gap-0.5 whitespace-normal px-4 py-3 text-left"
           onClick={() => onOpenNote(noteId)}
         >
           <span className="font-medium">{title}</span>
@@ -174,22 +174,22 @@ export default function Search({ onOpenNote }: Props) {
       {result !== null && (noteCount > 0 || decisionCount > 0) && (
         <>
           <section aria-label="노트 결과">
-            <Card className="px-2">
+            <Card className={noteCount === 0 ? "px-2" : "gap-0 py-0"}>
               {noteCount === 0 ? (
                 renderEmpty()
               ) : (
-                <ul>
+                <ul className="divide-y">
                   {result.notes.map((note) => renderRow(note.id, note.title, note.snippet, note.id))}
                 </ul>
               )}
             </Card>
           </section>
           <section aria-label="결정 사항 결과">
-            <Card className="px-2">
+            <Card className={decisionCount === 0 ? "px-2" : "gap-0 py-0"}>
               {decisionCount === 0 ? (
                 renderEmpty()
               ) : (
-                <ul>
+                <ul className="divide-y">
                   {result.decisions.map((decision) =>
                     renderRow(decision.id, decision.text, decision.note_title, decision.note_id),
                   )}
